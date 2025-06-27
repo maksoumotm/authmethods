@@ -1,0 +1,26 @@
+name: DevSecOps CI/CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-test-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install PHP & Dependencies
+        run: |
+          sudo apt-get install php php-mbstring php-xml unzip -y
+          composer install
+      - name: Run Tests
+        run: ./vendor/bin/phpunit
+      - name: Static Analysis (SAST)
+        uses: sonarsource/sonarcloud-github-action@v1
+        with:
+          projectKey: **(projet_sonar)**
+          token: ${{ secrets.SONAR_TOKEN }}
+      - name: DAST with OWASP ZAP
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:8000'
